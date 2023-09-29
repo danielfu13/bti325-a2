@@ -1,0 +1,68 @@
+/*********************************************************************************
+*  BTI325 – Assignment 1
+*  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  
+*  No part of this assignment has been copied manually or electronically from any other source
+*  (including web sites) or distributed to other students.
+* 
+*  Name: Daniel Fu    Student ID: 153024229   Date: Sept 29, 2023
+*
+*  Online (Cyclic) URL: _______________________________________________________
+*
+********************************************************************************/ 
+
+
+const express = require('express');
+const app = express();
+const port = 8080;
+const blogService = require('./blog-service.js');
+
+app.use(express.json());
+
+// Initialize the blog service and start the server if successful
+blogService.initialize()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  })
+  .catch(error => {
+    console.error(error);
+  });
+
+// Route to get published posts
+app.get('/blog', (req, res) => {
+  blogService.getPublishedPosts()
+    .then(posts => {
+      res.json(posts);
+    })
+    .catch(error => {
+      res.status(404).json({ message: error });
+    });
+});
+
+// Route to get all posts
+app.get('/posts', (req, res) => {
+  blogService.getAllPosts()
+    .then(posts => {
+      res.json(posts);
+    })
+    .catch(error => {
+      res.status(404).json({ message: error });
+    });
+});
+
+// Route to get all categories
+app.get('/categories', (req, res) => {
+  blogService.getCategories()
+    .then(categories => {
+      res.json(categories);
+    })
+    .catch(error => {
+      res.status(404).json({ message: error });
+    });
+});
+
+// Custom 404 route
+app.use((req, res) => {
+  res.status(404).send('Page Not Found');
+});
