@@ -10,19 +10,17 @@
 *
 ********************************************************************************/ 
 
-
 const express = require('express');
 const app = express();
-const port = 8080;
+const HTTP_PORT = process.env.PORT || 8080;
 const blogService = require('./blog-service.js');
 
 app.use(express.json());
 
 // Initialize the blog service and start the server if successful
-blogService.initialize()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
+blogService.initialize().then(() => {
+    app.listen(HTTP_PORT, () => {
+      console.log(`Server is running on port ${HTTP_PORT}`);
     });
   })
   .catch(error => {
@@ -31,8 +29,7 @@ blogService.initialize()
 
 // Route to get published posts
 app.get('/blog', (req, res) => {
-  blogService.getPublishedPosts()
-    .then(posts => {
+  blogService.getPublishedPosts().then(posts => {
       res.json(posts);
     })
     .catch(error => {
@@ -42,8 +39,7 @@ app.get('/blog', (req, res) => {
 
 // Route to get all posts
 app.get('/posts', (req, res) => {
-  blogService.getAllPosts()
-    .then(posts => {
+  blogService.getAllPosts().then(posts => {
       res.json(posts);
     })
     .catch(error => {
@@ -53,8 +49,7 @@ app.get('/posts', (req, res) => {
 
 // Route to get all categories
 app.get('/categories', (req, res) => {
-  blogService.getCategories()
-    .then(categories => {
+  blogService.getCategories().then(categories => {
       res.json(categories);
     })
     .catch(error => {
