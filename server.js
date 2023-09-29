@@ -12,52 +12,59 @@
 
 const express = require('express');
 const app = express();
+const path = require('path');
 const HTTP_PORT = process.env.PORT || 8080;
 const blogService = require('./blog-service.js');
 
-app.use(express.json());
+app.use(express.static('public'));
 
-// Initialize the blog service and start the server if successful
-blogService.initialize().then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Server is running on port ${HTTP_PORT}`);
-    });
-  })
-  .catch(error => {
-    console.error(error);
-  });
+function startListening() {
+    console.log("Express http server listening on: " + HTTP_PORT);
+  }
 
-// Route to get published posts
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname + "/views/about.html"));
+});
+
+app.get('/about', (req, res) => {
+    res.sendFile(path.join(__dirname + "/views/about.html"));
+});
+
+// Route to get blog posts
 app.get('/blog', (req, res) => {
   blogService.getPublishedPosts().then(posts => {
       res.json(posts);
-    })
-    .catch(error => {
+    }).catch(error => {
       res.status(404).json({ message: error });
     });
 });
 
-// Route to get all posts
+// Route to get posts
 app.get('/posts', (req, res) => {
   blogService.getAllPosts().then(posts => {
       res.json(posts);
-    })
-    .catch(error => {
+    }).catch(error => {
       res.status(404).json({ message: error });
     });
 });
 
-// Route to get all categories
+// Route to get categories
 app.get('/categories', (req, res) => {
   blogService.getCategories().then(categories => {
       res.json(categories);
-    })
-    .catch(error => {
+    }).catch(error => {
       res.status(404).json({ message: error });
     });
 });
 
-// Custom 404 route
+// Custom Error Message
 app.use((req, res) => {
-  res.status(404).send('Page Not Found');
+  res.status(404).send("Your code ain't working bro...try again");
 });
+
+// Initialize the blog service and start the server if successful
+blogService.initialize().then(() => {
+    app.listen(HTTP_PORT, startListening);
+  }).catch(() =>{
+    console.error(error);
+  });
