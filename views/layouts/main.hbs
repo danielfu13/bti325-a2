@@ -10,7 +10,7 @@
       <link rel="stylesheet" href="https://bootswatch.com/3/darkly/bootstrap.min.css" />
       <link rel="stylesheet" href="/public/css/main.css">
       
-      <title>WEB322 - Daniel Fu</title>
+      <title>Daniel Fu's Blog</title>
   </head>
   <body>
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -23,43 +23,26 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <span class="navbar-brand" href="#">WEB322 - Assignment Template</span>
+          <span class="navbar-brand" href="#">WEB322 - Daniel Fu</span>
         </div>
     
-        <!-- Collect the nav links, forms, and other content for toggling -->
+         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li><a href="/blog">Blog</a></li>
-            <li class="active"><a href="/about">About</a></li>
+            {{#navLink "/blog"}}Blog{{/navLink}}
+            {{#navLink "/about"}}About{{/navLink}}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/posts">Posts</a></li>
-            <li><a href="/categories">Categories</a></li>   
-            <li><a href="/posts/add">Add Post</a></li>
+             {{#navLink "/posts"}}Posts{{/navLink}}
+             {{#navLink "/categories"}}Categories{{/navLink}}
+             {{#navLink "/posts/add"}}Add Post{{/navLink}}            
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
     </nav>
-    <div class="container" style="padding-top:60px">
-      <div class="row">
-        <section class="main col-md-9">
-          <article>
-          <h2>About</h2>
-         <p>
-            Hi, my name is Daniel Fu and I am currently a student in the Software Development Program at Seneca College. 
-            Some activities I like doing is playing sports like soccer and basketball. I also like watching movies and shows, specifically UFC. 
-            One of my goals after graduating from this program would be to find a web development job at a big company. 
-            I enjoy designing webpages and make asthetic looking webpages. In this web programming course (BTI325), I am looking forward to learning many 
-            new skills and methods to develop high quality web pages.
-        </p>
-          </article>
-        </section>
-        <aside class="col-md-3">
-          <h2>Coming Soon</h2>
-          <p>Stay tuned for future updates about my life.</p>
-        </aside>
-      </div>
-    </div>
+        <div class="container" style="padding-top:60px">
+            {{{body}}}
+        </div>
 
     <!-- Latest compiled and minified jQuery 3.6.0 JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
