@@ -1,12 +1,12 @@
 /*********************************************************************************
-*  BTI325 – Assignment 4
+*  BTI325 – Assignment 5
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  
 *  No part of this assignment has been copied manually or electronically from any other source
 *  (including web sites) or distributed to other students.
 * 
-*  Name: Daniel Fu    Student ID: 153024229   Date: Nov 03, 2023
+*  Name: Daniel Fu    Student ID: 153024229   Date: Nov 20, 2023
 *
-*  Online (Cyclic) URL: https://champagne-meerkat-wrap.cyclic.app/
+*  Online (Cyclic) URL: https://champagne-meerkat-wrap.cyclic.app/blog
 *
 ********************************************************************************/ 
 
@@ -21,6 +21,8 @@ const HTTP_PORT = process.env.PORT || 8080;
 const blogService = require('./blog-service.js');
 const exphbs = require('express-handlebars');
 
+// Middleware for handling form data
+app.use(express.urlencoded({ extended: true }));
 
 app.engine('hbs', exphbs.engine({
     extname: '.hbs',
@@ -86,8 +88,17 @@ app.get('/about', (req, res) => {
     res.render('about');
 });
 
-app.get('/posts/add', (req, res) => {
-    res.render('addPost');
+// app.get('/posts/add', (req, res) => {
+//     res.render('addPost');
+// });
+
+app.get('/posts/add', async (req, res) => {
+    try {
+        const categories = await blogService.getCategories();
+        res.render('addPost', { categories: categories });
+    } catch (error) {
+        res.render('addPost', { categories: [] });
+    }
 });
 
 app.post('/posts/add', upload.single("featureImage"), (req, res) => {
@@ -268,6 +279,45 @@ app.get('/categories', (req, res) => {
       res.status(404).json({ message: error });
     });
 });
+
+//-----------------------------------------------//
+
+// Route to render the form for adding a category
+app.get('/categories/add', (req, res) => {
+    res.render('addCategory');
+  });
+  
+  // Route to handle the addition of a new category
+  app.post('/categories/add', async (req, res) => {
+    try {
+      const result = await blogService.addCategory(req.body);
+      res.redirect('/categories');
+    } catch (error) {
+      res.status(500).send('Unable to create category');
+    }
+  });
+  
+  // Route to delete a category by ID
+  app.get('/categories/delete/:id', async (req, res) => {
+    try {
+      const result = await blogService.deleteCategoryById(req.params.id);
+      res.redirect('/categories');
+    } catch (error) {
+      res.status(500).send('Unable to Remove Category / Category not found');
+    }
+  });
+  
+  // Route to delete a post by ID
+  app.get('/posts/delete/:id', async (req, res) => {
+    try {
+        const result = await blogService.deletePostById(req.params.id);
+        res.redirect('/posts');
+    } catch (error) {
+        res.status(500).send('Unable to Remove Post / Post not found');
+    }
+});
+
+  //-------------------------------------------------------------//
 
 // Custom Error Message
 app.use((req, res) => {
