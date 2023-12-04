@@ -1,15 +1,17 @@
 /*********************************************************************************
-*  BTI325 – Assignment 5
+*  BTI325 – Assignment 6
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  
 *  No part of this assignment has been copied manually or electronically from any other source
 *  (including web sites) or distributed to other students.
 * 
-*  Name: Daniel Fu    Student ID: 153024229   Date: Nov 20, 2023
+*  Name: Daniel Fu    Student ID: 153024229   Date: Dec 4th, 2023
 *
-*  Online (Cyclic) URL: https://champagne-meerkat-wrap.cyclic.app/blog
+*  Online (Cyclic) URL: 
 *
 ********************************************************************************/ 
 
+const authData = require('./auth-service.js')
+const clientSessions = require("client-sessions")
 const stripJs = require('strip-js');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2
@@ -53,7 +55,13 @@ app.engine('hbs', exphbs.engine({
 }));
 app.set('view engine', 'hbs');
 
-
+function ensureLogin  (req, res, next) {
+    if (!req.session.user) {
+      res.redirect('/login');
+    } else {
+      next();
+    }
+}
 cloudinary.config({
   cloud_name: 'dxetbauyx',
   api_key: '646543674724467',
@@ -63,6 +71,20 @@ cloudinary.config({
 const upload = multer(); 
 
 app.use(express.static('public'));
+
+app.use(
+    clientSessions({
+      cookieName: 'session', // this is the object name that will be added to 'req'
+      secret: 'o6LjQ5EVNC28ZgK64hDELM18ScpFQr', // this should be a long un-guessable string.
+      duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
+      activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
+    })
+  );
+
+  app.use(function(req, res, next) {
+    res.locals.session = req.session;
+    next();
+  });
 
 function startListening() {
     console.log("Express http server listening on: " + HTTP_PORT);
@@ -80,19 +102,13 @@ app.get('/', (req, res) => {
     res.redirect('/blog');
 });
 
-// app.get('/about', (req, res) => {
-//     res.sendFile(path.join(__dirname + "/views/about.html"));
-// });
 
 app.get('/about', (req, res) => {
     res.render('about');
 });
 
-// app.get('/posts/add', (req, res) => {
-//     res.render('addPost');
-// });
 
-app.get('/posts/add', async (req, res) => {
+app.get('/posts/add', ensureLogin, async (req, res) => {
     try {
         const categories = await blogService.getCategories();
         res.render('addPost', { categories: categories });
@@ -101,7 +117,7 @@ app.get('/posts/add', async (req, res) => {
     }
 });
 
-app.post('/posts/add', upload.single("featureImage"), (req, res) => {
+app.post('/posts/add', upload.single("featureImage"), ensureLogin, (req, res) => {
   let streamUpload = (req) => {
       return new Promise((resolve, reject) => {
           let stream = cloudinary.uploader.upload_stream(
@@ -239,7 +255,7 @@ app.get('/blog/:id', async (req, res) => {
 });
 
 
-app.get('/posts', (req, res) => {
+app.get('/posts', ensureLogin, (req, res) => {
   if (req.query.category) {
       blogService.getPostsByCategory(req.query.category)
           .then((result) => res.render('posts', { posts: result }))
@@ -255,7 +271,7 @@ app.get('/posts', (req, res) => {
   }
 });
 
-app.get('/posts/:value', (req, res) =>
+app.get('/posts/:value', ensureLogin, (req, res) =>
 {
     serv.getPostById(req.params.value)
         .then(result => res.send(result))
@@ -272,7 +288,7 @@ app.get('/categories', (req, res) => {
 
 
 // Route to get categories
-app.get('/categories', (req, res) => {
+app.get('/categories', ensureLogin, (req, res) => {
   blogService.getCategories().then(categories => {
       res.json(categories);
     }).catch(error => {
@@ -317,6 +333,76 @@ app.get('/categories/add', (req, res) => {
     }
 });
 
+app.get('/categories/add', ensureLogin, (req, res) =>
+{
+    res.render('addCategory', {body: 'addCategory'});
+});
+
+app.post('/categories/add', ensureLogin, (req, res) =>
+{
+    serv.addCategory(req.body).then(() => res.redirect('/categories'))
+});
+
+app.get('/categories/delete/:id', ensureLogin, (req, res) =>
+{
+    serv.deleteCategoryById(req.params.id).then(() => res.redirect('/categories')).catch(() => res.status(500).send('Unable to Remove Category / Category not found'))
+});
+
+app.get('/posts/delete/:id', ensureLogin, (req, res) =>
+{
+    serv.deletePostById(req.params.id).then(() => res.redirect('/posts')).catch(() => res.status(500).send('Unable to Remove Post / Post not found'))
+});
+
+app.get('/login', (req, res) =>
+{
+    res.render('login');
+});
+
+app.get('/register', (req, res) =>
+{
+    res.render('register');
+});
+
+app.post('/register', (req, res) =>
+{
+    authData.registerUser(req.body).then((data) =>
+    {
+        res.render('register', { successMessage: "User created" })
+    }).catch(err =>
+    {
+        res.render('register', {errorMessage: err, userName: req.body.userName} )
+    })
+});
+
+app.post('/login', (req, res) =>
+{
+
+    req.body.userAgent = req.get('User-Agent');
+
+    authData.checkUser(req.body).then((user) => {
+        req.session.user = {
+            userName: user.userName,
+            email: user.email,
+            loginHistory: user.loginHistory
+        }
+        res.redirect('/posts');
+    }).catch(err =>
+    {
+        res.render('login', {errorMessage: err, userName: req.body.userName})
+    })
+    
+});
+
+app.get('/logout', (req, res) =>
+{
+    req.session.reset();
+    res.redirect('/');
+});
+
+app.get('/userHistory', ensureLogin, (req, res) =>
+{
+    res.render('userHistory');
+});
   //-------------------------------------------------------------//
 
 // Custom Error Message
@@ -324,10 +410,13 @@ app.use((req, res) => {
   res.status(404).send("Your code ain't working bro...try again");
 });
 
-// Initialize the blog service and start the server if successful
-blogService.initialize().then(() => {
-    app.listen(HTTP_PORT, startListening);
-  }).catch(() =>{
-    console.error(error);
+
+blogService.initialize().then(authData.initialize).then(function(){
+    app.listen(HTTP_PORT, function(){
+        console.log("app listening on: " + HTTP_PORT)
+    });
+}).catch(function(err){
+    console.log("unable to start server: " + err);
 });
+
 
